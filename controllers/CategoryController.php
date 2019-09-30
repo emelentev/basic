@@ -1,15 +1,15 @@
 <?php
 
+
 namespace app\controllers;
 
-use app\models\Brands;
+use app\models\Category;
 use yii\data\ActiveDataProvider;
 use yii\rest\ActiveController;
 
-class BrandsController extends ActiveController
+class CategoryController extends ActiveController
 {
-
-    public $modelClass = 'app\models\Brands';
+    public $modelClass = 'app\models\Category';
 
     protected function verbs()
     {
@@ -31,7 +31,7 @@ class BrandsController extends ActiveController
     }
     public function prepareDataProvider()
     {
-        $query = Brands::find();
+        $query = Category::find();
         return new ActiveDataProvider([
             'query' => $query,
         ]);

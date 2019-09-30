@@ -3,6 +3,7 @@
 namespace app\models;
 
 use Yii;
+use yii\helpers\VarDumper;
 
 /**
  * This is the model class for table "shop_articles".
@@ -17,6 +18,7 @@ use Yii;
  */
 class Articles extends \yii\db\ActiveRecord
 {
+
     /**
      * {@inheritdoc}
      */
@@ -54,6 +56,17 @@ class Articles extends \yii\db\ActiveRecord
         ];
     }
 
+    public function fields()
+    {
+        $fields = parent::fields();
+
+       $fields['brand_name'] = function(){
+           return $this->brand->name;
+       };
+
+       return $fields;
+    }
+
     /**
      * @return \yii\db\ActiveQuery
      */
@@ -71,5 +84,11 @@ class Articles extends \yii\db\ActiveRecord
             ->limit('all')
             ->all();
         return $articles;
+    }
+
+    public function getCategory()
+    {
+        return $this->hasMany(Category::className(), ['id' => 'category_id'])
+            ->viaTable('shop_articles_category_lnk', ['shop_articles_id' => 'id']);
     }
 }

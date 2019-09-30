@@ -1,16 +1,13 @@
 <?php
 
-
 namespace app\controllers;
 
-
 use app\models\Brands;
-use app\models\Entry2Form;
+use app\models\Articles;
+use app\models\Category;
 use yii\data\ActiveDataProvider;
 use yii\helpers\VarDumper;
 use yii\rest\ActiveController;
-use yii\data\Pagination;
-use app\models\Articles;
 
 class ArticlesController extends ActiveController
 {
@@ -24,7 +21,6 @@ class ArticlesController extends ActiveController
             'create' => ['POST'],
             'update' => ['PUT', 'PATCH'],
             'delete' => ['DELETE'],
-            'entry' => ['GET'],
         ];
     }
 
@@ -45,42 +41,51 @@ class ArticlesController extends ActiveController
 
     public function prepareDataProvider()
     {
-        $query = Articles::find()->where(['brand_id' => 5]);
-       return new ActiveDataProvider([
+        $brand_id = \Yii::$app->request->get('brand_id');
+        $brand_name = \Yii::$app->request->get('brand_name');
+        $cat_id = \Yii::$app->request->get('cat_id');
+        if ($cat_id){
+
+            //
+            $sql = "SELECT shop_articles_id FROM `shop_articles_category_lnk` WHERE `category_id`=:id";
+            $ids = \Yii::$app->db->createCommand($sql)->bindValue(':id', $cat_id)->queryColumn();
+
+            $articles_by_category = Articles::find()
+                ->where(['id' => $ids])
+                ->asArray()->all();
+
+            VarDumper::dump($articles_by_category);die(" Die");
+        }
+        if ($brand_name){
+            $idBrand = Brands::find()->where(['name' => $brand_name])->one()->id;
+        }
+        $query = Articles::find()->with('brand');
+        if ($brand_id){
+            $query->where(['brand_id' => $brand_id]);
+        }
+        if ($brand_name){
+            $query->where(['brand_id' => $idBrand]);
+        }
+        return new ActiveDataProvider([
            'query' => $query,
-       ]);
+        ]);
     }
 
-    public function actionEntry($brand_id)
-    {
-        $query = Articles::find();
-
-        $articles = $query->orderBy('id')
-            ->where(['brand_id' => $brand_id])
-            ->offset(0)
-            ->limit('all')
-            ->all();
-        
-        return $articles;
-    }
-
-    public function actionEntry2($article)
+    public function actionBrandByArticle($article)
     {
         $queryArticles = Articles::find();
         $queryBrands = Brands::find();
 
-        $articles = $queryArticles->orderBy('id')
+        $articles = $queryArticles
+            ->select('article, brand_id')
+            ->orderBy('id')
             ->where(['article' => $article])
-            ->offset(0)
-            ->limit('all')
             ->all();
         foreach ($articles as $article){
-            $brandIdForArticle = $article->brand_id;
+            $brandIdForArticle[] = $article->brand_id;
         };
         $brandInfo = $queryBrands->orderBy('id')
             ->where(['id' => $brandIdForArticle])
-            ->offset(0)
-            ->limit('all')
             ->all();
         return $brandInfo;
     }
